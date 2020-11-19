@@ -1,0 +1,20 @@
+FROM python:3.8.5-slim
+
+RUN pip install \
+    aiohttp \
+    fastapi \
+    google-cloud-monitoring \
+    google-cloud-pubsub \
+    grpcio \
+    Pillow \
+    tensorflow \
+    tensorflow-serving-api \
+    uvicorn \
+    numpy
+
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /app
+COPY src /app/src
+
+CMD uvicorn --host=0.0.0.0 src.main:app

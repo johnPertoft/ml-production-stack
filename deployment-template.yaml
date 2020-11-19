@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ml-api
+  labels:
+    name: ml-api
+
+---
+
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  namespace: ml-api
+  name: api-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "ml-api-ip"
+spec:
+  backend:
+    serviceName: api-service
+    servicePort: 8000
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ml-api
+  name: api-service
+spec:
+  selector:
+    app: api
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+  type: NodePort
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ml-api
+  name: serving-service
+spec:
+  selector:
+    app: serving
+  ports:
+  - name: grpc
+    port: 8500
+    targetPort: 8500
+  - name: http
+    port: 8501
+    targetPort: 8501
+  type: ClusterIP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: ml-api
+  name: api
+spec:
+  selector:
+    matchLabels:
+      app: api
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: ml-api-api
+        image: ${API_IMAGE}
+        imagePullPolicy: ${API_IMAGE_PULL_POLICY}
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /  # TODO: Doesn't seem to work with /healthcheck endpoint?
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 3
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: ml-api
+  name: serving
+spec:
+  selector:
+    matchLabels:
+      app: serving
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: serving
+    spec:
+      containers:
+      - name: ml-api-serving
+        image: ${SERVING_IMAGE}
+        imagePullPolicy: ${SERVING_IMAGE_PULL_POLICY}
+        ports:
+        - name: grpc
+          containerPort: 8500
+        - name: http
+          containerPort: 8501
