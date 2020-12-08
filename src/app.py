@@ -8,7 +8,6 @@ from fastapi import FastAPI
 from fastapi import Header
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
-from pydantic import Field
 from pydantic import HttpUrl
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
@@ -27,17 +26,19 @@ logger.setLevel(logging.INFO)
 
 
 class PredictionResponse(BaseModel):
-    id: str = Field(...)
-    prediction: ModelPrediction = Field(...)
+    id: str
+    prediction: ModelPrediction
 
 
 class PredictionEvent(BaseModel):
-    id: str = Field(...)
-    service: str = Field(...)
-    environment: str = Field(...)
-    caller: str = Field(...)
-    image_url: str = Field(...)
-    prediction: ModelPrediction = Field(...)
+    id: str
+    service: str
+    environment: str
+    caller: str
+    image_url: str
+    prediction: ModelPrediction
+    # TODO: Include model version also.
+    # TODO: Include date?
 
 
 def create_application(

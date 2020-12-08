@@ -11,7 +11,9 @@ logging.basicConfig(format="[%(levelname)s] [%(asctime)s] %(message)s")
 
 
 service_metrics = ServiceMetrics("ml_api_stack")
-service_events = ServiceEvents()
+service_events = ServiceEvents(
+    topic_name="projects/kubernetes-test-297213/topics/service-events"
+)
 download_client = DownloadClient(service_metrics)
 model_client = ModelClient(
     host="serving-service.ml-api.svc.cluster.local", grpc_port=8500, http_port=8501
