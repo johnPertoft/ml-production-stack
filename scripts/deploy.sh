@@ -22,6 +22,9 @@ shift
 
 case ${ENV} in
     local)
+        echo "TODO: Fix things to make it work with minikube."
+        exit
+
         if [[ "$(kubectl config current-context)" != "minikube" ]]; then
             minikube start
             minikube addons enable ingress
@@ -42,11 +45,6 @@ case ${ENV} in
         export SERVING_IMAGE_PULL_POLICY="Never"
         envsubst < deployment-template.yaml > /tmp/deployment.yaml
         kubectl apply -f /tmp/deployment.yaml
-
-        if [[ "$1" == "--restart" ]]; then
-            kubectl rollout restart deployment/serving -n ml-api
-            kubectl rollout restart deployment/api -n ml-api
-        fi
         ;;
     dev|pro)
         API_IMAGE="${CONTAINER_REGISTRY}/ml-api-api"
@@ -72,3 +70,8 @@ case ${ENV} in
         exit 1
         ;;
 esac
+
+if [[ "$1" == "--restart" ]]; then
+    kubectl rollout restart deployment/serving -n ml-api
+    kubectl rollout restart deployment/api -n ml-api
+fi
