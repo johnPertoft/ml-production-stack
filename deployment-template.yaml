@@ -7,6 +7,19 @@ metadata:
 
 ---
 
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMServiceAccountKey  # TODO: This is not found in this apiVersion?
+metadata:
+  name: ml-api-service-account-key
+spec:
+  publicKeyType: TYPE_X509_PEM_FILE
+  keyAlgorithm: KEY_ALG_RSA_2048
+  privateKeyType: TYPE_GOOGLE_CREDENTIALS_FILE
+  serviceAccountRef:
+    name: ml-api-service-account
+
+---
+
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
@@ -71,10 +84,20 @@ spec:
       labels:
         app: api
     spec:
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: ml-service-account-key
       containers:
       - name: ml-api-api
         image: ${API_IMAGE}
         imagePullPolicy: ${API_IMAGE_PULL_POLICY}
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
         ports:
         - containerPort: 8000
         readinessProbe:
